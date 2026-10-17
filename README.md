@@ -193,6 +193,11 @@ Veja `PUBLICAR.md`. Em um projeto Supabase novo, execute `supabase/INSTALAR_PROJ
 
 O acesso de demonstração foi desativado, inclusive quando faltam variáveis: nesse caso o aplicativo informa erro de configuração. `VITE_DEMO_MODE` não ativa mais contas fictícias. Configure `VITE_SUPABASE_URL` e `VITE_SUPABASE_PUBLISHABLE_KEY`.
 
-Se já executou as três migrações anteriores, execute apenas `supabase/migrations/20261017011946_runner_identity.sql` no SQL Editor. Para projeto novo, o instalador completo já inclui as quatro migrações; não execute ambos. Reimplante a função `delete-account` para incluir a limpeza dos avatares.
+Se já executou as três migrações anteriores, execute apenas `supabase/migrations/20261017011946_runner_identity.sql` no SQL Editor. Para projeto novo, o instalador completo já inclui as cinco migrações; não execute ambos. Reimplante a função `delete-account` para incluir a limpeza dos avatares.
 
 Entre com sua conta → Perfil → Editar perfil. Envie JPG, PNG ou WebP de até 5 MB e informe a marca/modelo do tênis (opcional). É possível trocar ou remover a foto. Foto e tênis aparecem no perfil público; a foto também aparece no feed e na busca. Os avatares ficam em bucket privado com leitura autorizada por RLS e links temporários de até uma hora; um link já emitido continua válido até expirar após mudar a privacidade. Só o dono pode enviar e apagar arquivos na própria pasta. Não há registro de quilometragem por tênis nesta versão.
+
+
+### Login social
+
+Consulte `LOGIN-SOCIAL.md` para ativar o provedor Google no Supabase e cadastrar os retornos corretos. O código já inicia OAuth e processa o retorno; a ativação exige as credenciais das suas contas. Google ainda desabilitado no projeto não autenticam usuários.

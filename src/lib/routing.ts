@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 export function useRoute() {
   const [path, setPath] = useState(window.location.pathname);
   useEffect(() => {
@@ -6,11 +6,11 @@ export function useRoute() {
     window.addEventListener("popstate", update);
     return () => window.removeEventListener("popstate", update);
   }, []);
-  function go(next: string) {
+  const go = useCallback((next: string) => {
     if (!next.startsWith("/") || next.startsWith("//")) next = "/";
     window.history.pushState(null, "", next);
     setPath(next.split("?")[0]);
     window.scrollTo({ top: 0, behavior: "instant" });
-  }
+  }, []);
   return { path, go };
 }

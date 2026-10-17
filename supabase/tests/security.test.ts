@@ -500,3 +500,12 @@ describe("Organização, privacidade e comunidade", () => {
   expect((await as('authenticated',a,`select name from storage.objects where bucket_id='avatars'`)).rows).toHaveLength(1);
  });
 });
+
+describe('Perfis de contas sociais',()=>{
+ test('usa full_name do Google e mantém fallback quando Apple não fornece nome',async()=>{
+  const google='10000000-0000-4000-8000-000000000004',apple='10000000-0000-4000-8000-000000000005';
+  await db.exec(`insert into auth.users(id,raw_user_meta_data) values('${google}','{"full_name":"Maria Corredora"}'),('${apple}','{}')`);
+  const result=await db.query(`select id,name from public.profiles where id in ('${google}','${apple}') order by id`);
+  expect(result.rows).toEqual([{id:google,name:'Maria Corredora'},{id:apple,name:'Corredor'}]);
+ });
+});

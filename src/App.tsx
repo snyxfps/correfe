@@ -1,3 +1,4 @@
+import { AuthCallback } from "./components/AuthCallback";
 import { People, RunnerProfile } from "./components/People";
 import { Brand, LogoMark } from "./components/Brand";
 import { useEffect, useState, useRef } from "react";
@@ -522,6 +523,7 @@ export default function App() {
       onRemovePost={(postId) => setDialog({ type: "removePost", postId })}
     />
   );
+  if (path === "/auth/retorno") return <AuthCallback go={go}/>;
   if (authModes[path])
     return (
       <AuthPage

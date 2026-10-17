@@ -316,4 +316,16 @@ $$;
 revoke all on function public.search_runners(text,integer) from public;
 grant execute on function public.search_runners(text,integer) to anon,authenticated;
 
+-- Arquivo: 20261017012639_social_auth_profiles.sql
+-- Metadados apenas para apresentação. Nunca usados para autorização.
+create or replace function private.create_profile() returns trigger language plpgsql security definer set search_path='' as $$
+begin
+ insert into public.profiles(id,name) values(new.id,left(coalesce(
+ nullif(trim(new.raw_user_meta_data->>'name'),''),
+ nullif(trim(new.raw_user_meta_data->>'full_name'),''),
+ 'Corredor'),80));
+ return new;
+end; $$;
+revoke all on function private.create_profile() from public,anon,authenticated;
+
 COMMIT;

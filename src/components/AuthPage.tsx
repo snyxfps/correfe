@@ -1,5 +1,6 @@
+import { startSocialSignIn } from "../lib/socialAuth";
 import { Brand, LogoMark } from "./Brand";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import {
   ArrowLeft,
   ArrowUpRight,
@@ -21,6 +22,15 @@ export function AuthPage({
 }) {
   const [visible, setVisible] = useState(false),
     [message, setMessage] = useState("");
+  const [socialBusy,setSocialBusy] = useState<string | null>(null),[socialError,setSocialError]=useState('');
+  const socialPending=useRef(false);
+  async function socialLogin(provider:'google') {
+    if(socialPending.current)return;
+    socialPending.current=true;setSocialBusy(provider);setSocialError('');
+    try {await startSocialSignIn(provider,new URLSearchParams(window.location.search).get('next'));}
+    catch(err){setSocialError(err instanceof Error?err.message:'Não foi possível conectar. Confira sua conexão e tente novamente.');}
+    finally{socialPending.current=false;setSocialBusy(null);}
+  }
   const title = {
     login: (
       <>
@@ -105,14 +115,13 @@ export function AuthPage({
           {(mode === "login" || mode === "signup") && (
             <>
               <div className="social-buttons">
-                <button disabled className="social-button">
+                <button type="button" disabled={!!socialBusy} className="social-button" onClick={()=>void socialLogin("google")}>
                   <span className="google-symbol">G</span> Continuar com Google{" "}
-                  <small>EM BREVE</small>
+                  {socialBusy === "google" && <small>Conectando…</small>}
                 </button>
-                <button disabled className="social-button">
-                  <AppleLogo /> Continuar com Apple <small>EM BREVE</small>
-                </button>
+
               </div>
+              {socialError && <p role="alert" className="form-error">{socialError}</p>}
               <div className="auth-divider">
                 <span>ou com seu e-mail</span>
               </div>
@@ -320,21 +329,10 @@ export function AuthPage({
             </p>
           )}
           <p className="auth-footnote">
-            Google e Apple serão conectados na próxima etapa. O acesso por
-            e-mail depende do Supabase configurado.
+            Use sua conta Google ou seu e-mail para entrar. No primeiro acesso com um provedor, sua conta é criada automaticamente.
           </p>
         </div>
       </section>
     </main>
-  );
-}
-function AppleLogo() {
-  return (
-    <svg width="21" height="23" viewBox="0 0 24 24" aria-hidden="true">
-      <path
-        fill="currentColor"
-        d="M17 12c0-2 1-3 2-4-1-2-3-2-4-2-2 0-3 1-4 1S9 6 7 6C3 6 1 11 3 16c1 3 3 6 5 6 1 0 2-1 3-1s2 1 4 1c2 0 4-4 5-6-2-1-3-2-3-4ZM15 1c-2 0-4 2-4 5 3 0 5-3 4-5Z"
-      />
-    </svg>
   );
 }
