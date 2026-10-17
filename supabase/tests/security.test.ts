@@ -467,3 +467,36 @@ describe("Organização, privacidade e comunidade", () => {
     ).toHaveLength(0);
   });
 });
+
+ describe("Busca de corredores", () => {
+ test("busca por cidade sem acentos e não expõe perfil privado nem email", async () => {
+   await db.exec(`update public.profiles set city='São Paulo' where id='${a}'; update public.profiles set visibility='private',city='São Paulo' where id='${c}'`);
+   const result=await as('anon','',`select * from public.search_runners('sao paulo',0)`);
+   expect(result.rows).toHaveLength(1);
+   expect(result.rows[0]).toMatchObject({id:a});
+   expect(result.rows[0]).not.toHaveProperty('email');
+   const own=await as('authenticated',c,`select * from public.search_runners('Leo',0)`);
+   expect(own.rows).toHaveLength(0);
+ });
+ test("coringas são texto literal e paginação não repete resultados", async () => {
+   expect((await as('anon','',`select * from public.search_runners('%',0)`)).rows).toHaveLength(0);
+   expect((await as('anon','',`select * from public.search_runners('',20)`)).rows).toHaveLength(0);
+ });
+});
+
+ describe('Foto e tênis do corredor',()=>{
+ test('somente o dono altera identidade e foto precisa pertencer à própria pasta',async()=>{
+  await as('authenticated',a,`update public.profiles set shoes='Novablast 5',avatar_path='${a}/avatar.webp' where id='${a}'`);
+  await as('authenticated',b,`update public.profiles set shoes='invasor' where id='${a}'`);
+  expect((await db.query(`select shoes from public.profiles where id='${a}'`)).rows[0]).toMatchObject({shoes:'Novablast 5'});
+  await expect(as('authenticated',a,`update public.profiles set avatar_path='${b}/avatar.webp' where id='${a}'`)).rejects.toThrow();
+ });
+ test('upload não pode usar a pasta de outro corredor e avatar privado não é lido por visitante',async()=>{
+  await expect(as('authenticated',b,`insert into storage.objects(bucket_id,name) values('avatars','${a}/fake.webp')`)).rejects.toThrow();
+  await as('authenticated',a,`insert into storage.objects(bucket_id,name) values('avatars','${a}/avatar.webp')`);
+  expect((await as('anon','',`select name from storage.objects where bucket_id='avatars'`)).rows).toHaveLength(1);
+  await as('authenticated',a,`update public.profiles set visibility='private' where id='${a}'`);
+  expect((await as('anon','',`select name from storage.objects where bucket_id='avatars'`)).rows).toHaveLength(0);
+  expect((await as('authenticated',a,`select name from storage.objects where bucket_id='avatars'`)).rows).toHaveLength(1);
+ });
+});

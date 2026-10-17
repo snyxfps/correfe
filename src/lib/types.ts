@@ -1,4 +1,6 @@
 export type Profile = {
+  avatar_path?: string | null;
+  shoes?: string;
   id: string;
   name: string;
   city: string;
@@ -96,4 +98,4 @@ export type Data = {
   products: Product[];
   orders: Order[];
 };
-export type Tab = "feed" | "runs" | "groups" | "album" | "shop" | "profile";
+export type Tab = "feed" | "people" | "runs" | "groups" | "album" | "shop" | "profile";

@@ -62,7 +62,6 @@ Antes de clicar Deploy, cadastre as variáveis em Environment Variables:
 | --- | --- |
 | `VITE_SUPABASE_URL` | `https://xsfyifslgyynfegdppun.supabase.co` |
 | `VITE_SUPABASE_PUBLISHABLE_KEY` | A publishable key já preenchida no `.env.local` deste projeto |
-| `VITE_DEMO_MODE` | `false` |
 
 Para o primeiro ambiente, use Production. Configure Preview/Development conforme precisar; para previews independentes prefira um banco de teste. As variáveis entram no build do Vite; se alterar um valor depois, faça Redeploy. O `.env.local` não será enviado ao GitHub nem importado automaticamente pela Vercel.
 
@@ -91,6 +90,30 @@ npm run dev
 
 Aplique o banco antes de esperar o feed real funcionar. Com Supabase ativo, o banco começa vazio, sem as pessoas/corridas da demonstração. Crie uma conta, confirme o e-mail, crie um grupo e marque uma corrida. Depois teste com outra conta, como descrito no README.
 
-Para voltar temporariamente à demo, mude `VITE_DEMO_MODE=true` no `.env.local` e reinicie o servidor. Isso não altera o banco.
+O acesso de demonstração foi removido. Sem configuração válida do Supabase, o aplicativo informa o erro.
 
 Referências: [Vite na Vercel](https://vercel.com/docs/frameworks/frontend/vite) e [redirecionamentos do Supabase](https://supabase.com/docs/guides/auth/redirect-urls).
+
+
+## Atualização: busca de corredores
+
+A barra no topo pesquisa por nome ou cidade (inclusive sem acentos), com paginação de 20 perfis. Os resultados abrem um perfil público. Perfis privados e e-mails não aparecem nos resultados.
+
+**Projeto Supabase novo:** abra SQL Editor → New query, copie todo o conteúdo de `supabase/INSTALAR_PROJETO_NOVO.sql` e clique Run. Esse arquivo instala as quatro migrações juntas, em uma transação. Não execute também as migrações individualmente.
+
+**Se já instalou a base:** execute somente os arquivos ainda não aplicados de `supabase/migrations`, em ordem. Se já executou os dois primeiros, falta apenas `20261017004237_runner_search.sql`. O instalador completo recusa uma base já existente para evitar recriar tabelas.
+
+Depois, em Authentication → Providers, habilite Email. Configure Authentication → URL Configuration com Site URL `http://localhost:5173` durante o desenvolvimento e adicione os redirects `http://localhost:5173/entrar` e `http://localhost:5173/nova-senha`. Na produção, adicione também os endereços equivalentes do domínio da Vercel e use esse domínio como Site URL. Google e Apple continuam dependendo da configuração de cada provedor.
+
+Reinicie o aplicativo após configurar `.env.local`. Crie sua conta pela tela Cadastro; confirme o e-mail se a confirmação estiver habilitada. O SQL cria o perfil automaticamente. Edite nome, cidade e ritmo em Perfil. Para testar a busca, cadastre uma segunda conta com perfil público: não são inseridas pessoas fictícias no banco real.
+
+A função de exclusão de conta precisa ser publicada separadamente, conforme README. Ela não é necessária para o cadastro, login por senha e busca. Nenhum SQL foi aplicado remotamente por este projeto.
+
+
+### Contas reais, foto e tênis
+
+O acesso de demonstração foi desativado, inclusive quando faltam variáveis: nesse caso o aplicativo informa erro de configuração. `VITE_DEMO_MODE` não ativa mais contas fictícias. Configure `VITE_SUPABASE_URL` e `VITE_SUPABASE_PUBLISHABLE_KEY`.
+
+Se já executou as três migrações anteriores, execute apenas `supabase/migrations/20261017011946_runner_identity.sql` no SQL Editor. Para projeto novo, o instalador completo já inclui as quatro migrações; não execute ambos. Reimplante a função `delete-account` para incluir a limpeza dos avatares.
+
+Entre com sua conta → Perfil → Editar perfil. Envie JPG, PNG ou WebP de até 5 MB e informe a marca/modelo do tênis (opcional). É possível trocar ou remover a foto. Foto e tênis aparecem no perfil público; a foto também aparece no feed e na busca. Os avatares ficam em bucket privado com leitura autorizada por RLS e links temporários de até uma hora; um link já emitido continua válido até expirar após mudar a privacidade. Só o dono pode enviar e apagar arquivos na própria pasta. Não há registro de quilometragem por tênis nesta versão.

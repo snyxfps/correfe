@@ -1,6 +1,6 @@
 # CORREFÉ ↗ — comunidade de corrida
 
-React + Vite + TypeScript. Visual preto e branco, mobile-first, demonstração em memória e estrutura para Supabase + Vercel. Nenhum serviço foi criado, contratado ou publicado nesta entrega.
+React + Vite + TypeScript. Visual preto e branco, mobile-first, contas reais e estrutura para Supabase + Vercel. Nenhum serviço foi criado, contratado ou publicado nesta entrega.
 
 ## Rodar agora
 
@@ -13,9 +13,7 @@ npm run dev
 
 Abra o endereço mostrado no terminal, normalmente `http://127.0.0.1:5173`.
 
-Sem as variáveis do Supabase, a faixa **DEMO** permanece visível. O perfil fictício é Alex Costa. Criações, edições, cancelamentos, fotos, denúncias, privacidade e pedidos alteram somente a memória desta aba. **Recarregar restaura os dados iniciais.** Não há banco simulado no localStorage. Fotos da demonstração não saem do navegador.
-
-Os novos registros da demo não existem em outra aba ou dispositivo, mesmo que você copie seus links. Os convites dos dados fixos, como `/corridas/r1` e `/grupos/g1`, podem ser abertos diretamente. Com Supabase, os links acessam os registros persistidos.
+O aplicativo exige Supabase configurado. Sem as variáveis, mostra um erro de configuração; não existe acesso a uma conta de demonstração.
 
 ## O que mudou nesta versão
 
@@ -28,7 +26,7 @@ Os novos registros da demo não existem em outra aba ou dispositivo, mesmo que v
 - **Depois da corrida:** convite para publicar após o término previsto, seleção do encontro já preenchida, álbum filtrado por corrida e cartão **PNG** de 1080×1350 para baixar e compartilhar. A distância é declarada pelo corredor, sem comprovação GPS.
 - **Comunidade:** denúncia de grupo/publicação, acompanhamento pelo denunciante, revisão pelo dono do grupo e remoção de publicações/fotos pelo autor ou dono. Confirmação antes de remover.
 - **Privacidade:** perfil público ou privado, aplicado no banco por RLS. No privado, terceiros não leem nome, cidade, bio ou ritmo do perfil. Textos, fotos, grupos e inscrições continuam públicos, como informado na tela.
-- **Conta:** fluxo de confirmação de exclusão definitiva e função de servidor preparada. Na demo, apenas encerra o perfil fictício da sessão. A exclusão real exige publicar/configurar a função separadamente; isso não foi feito.
+- **Conta:** fluxo de confirmação de exclusão definitiva e função de servidor preparada. A exclusão real exige publicar/configurar a função separadamente; isso não foi feito.
 
 Continuam disponíveis perfis editáveis, grupos, feed com fotos e curtidas, álbum coletivo e loja por grupo. A loja registra pedidos de interesse, **sem cobrança, estoque, frete ou pagamento online**. Dono vê os pedidos no grupo e comprador os vê no perfil. O total real é calculado pelo banco, não pelo navegador.
 
@@ -42,7 +40,6 @@ Continuam disponíveis perfis editáveis, grupos, feed com fotos e curtidas, ál
 ```dotenv
 VITE_SUPABASE_URL=https://SEU-PROJETO.supabase.co
 VITE_SUPABASE_PUBLISHABLE_KEY=SUA_CHAVE_PUBLICA
-VITE_DEMO_MODE=false
 ```
 
 3. No SQL Editor, execute por inteiro, **na ordem**, uma única vez:
@@ -58,7 +55,7 @@ Se a migração inicial já foi aplicada, execute **somente** `20261017000754_co
 
 Também é possível usar o histórico de migrações da CLI oficial, vinculando conscientemente seu projeto e revisando as alterações antes de enviá-las. Não há projeto remoto vinculado neste código. `project_id` em `supabase/config.toml` identifica apenas o projeto local.
 
-A chave `publishable` é pública e vai ao navegador. **Nunca coloque service*role, secret key, senha do banco ou token administrativo em uma variável `VITE*\*`.** As credenciais administrativas só podem existir no servidor. Configuração incompleta ou servidor indisponível mostra erro; não faz fallback silencioso para a demo. Para forçar a demo, use `VITE_DEMO_MODE=true`.
+A chave `publishable` é pública e vai ao navegador. **Nunca coloque service*role, secret key, senha do banco ou token administrativo em uma variável `VITE*\*`.** As credenciais administrativas só podem existir no servidor. Configuração incompleta ou servidor indisponível mostra erro; não faz fallback silencioso para a demo.
 
 ### Google e Apple: próxima etapa
 
@@ -144,7 +141,7 @@ Nada foi publicado. Quando decidir:
 1. Envie esta pasta para um repositório incluindo `package-lock.json`, sem `.env.local`, `node_modules`, chaves ou tokens.
 2. Importe na Vercel. Se o repositório contiver uma pasta `correfe`, selecione-a como **Root Directory**.
 3. Framework **Vite**, Node **24.x**, install `npm ci`, build `npm run build`, output `dist`.
-4. Defina as variáveis públicas do Supabase nos ambientes desejados. Elas entram no build; alterações exigem novo deploy. Sem variáveis, a publicação será uma demo sem persistência.
+4. Defina as variáveis públicas do Supabase nos ambientes desejados. Elas entram no build; alterações exigem novo deploy. Sem variáveis, o aplicativo mostra um erro de configuração.
 5. `vercel.json` já tem fallback das rotas da SPA (`/entrar`, `/corridas/:id`, etc.) e headers básicos.
 6. Configure Site URL/Redirect URLs do Supabase e, se ativar a função de exclusão, `ALLOWED_ORIGIN` para o domínio exato.
 7. Execute o roteiro de aceite. Não há plano pago, assinatura ou cobrança contratado pelo código.
@@ -163,7 +160,7 @@ src/components/ShareTools.tsx      links, WhatsApp, calendário e cartão PNG
 src/components/AccountSettings.tsx privacidade e confirmação de exclusão
 src/components/forms.tsx           campos e formulário assíncrono
 src/components/ui.tsx              modal, avatar, títulos e estados vazios
-src/lib/useCorre.ts                operações demo/Supabase
+src/lib/useCorre.ts                operações Supabase
 src/lib/community.ts               filtros, calendário, mapas e cartão
 src/lib/routing.ts                 rotas e histórico sem dependência adicional
 src/lib/demo.ts                    dados fictícios em memória
@@ -180,8 +177,22 @@ Sem OAuth ativado, pagamento, estoque, chat, seguidores, push, grupos privados, 
 
 Consultas carregam até 500 registros por tabela; ainda não há paginação/cursor nem realtime. Para crescer, implemente consultas por tela, paginação e uma revisão independente de moderação. Defina sua política de privacidade e suporte antes de abrir para o público. Edição/remoção de catálogo e grupos inteiros ainda depende de manutenção administrativa, fora do fluxo atual.
 
-A logo em `public/brand-logo.jpg` foi fornecida pelo usuário; é exibida com enquadramento circular em CSS/SVG, sem redesenho. A direção visual usa a referência pública [@\_correfe](https://www.instagram.com/_correfe/): coletivo de corrida, preto e branco, camisetas e linguagem urbana. Grupos, pessoas, agenda e preços de demonstração continuam fictícios. As ilustrações de produtos são mockups, não o catálogo real do Instagram.
+A logo em `public/brand-logo.jpg` foi fornecida pelo usuário; é exibida com enquadramento circular em CSS/SVG, sem redesenho. A direção visual usa a referência pública [@\_correfe](https://www.instagram.com/_correfe/): coletivo de corrida, preto e branco, camisetas e linguagem urbana. O banco real inicia sem grupos, pessoas ou corridas de exemplo. As ilustrações de produtos são mockups, não o catálogo real do Instagram.
 
 Ilustrações SVG locais originais; fontes do Google Fonts com fallback se a rede estiver indisponível. Não há bibliotecas de mapas ou serviços pagos embutidos.
 
 Referências: [Auth](https://supabase.com/docs/reference/javascript/auth-signup), [recuperação de senha](https://supabase.com/docs/reference/javascript/auth-resetpasswordforemail), [RLS](https://supabase.com/docs/guides/database/postgres/row-level-security), [segurança de funções](https://supabase.com/docs/guides/functions/auth).
+
+
+### Busca de corredores e instalação simplificada
+
+Veja `PUBLICAR.md`. Em um projeto Supabase novo, execute `supabase/INSTALAR_PROJETO_NOVO.sql` no SQL Editor uma vez. Em uma base existente, aplique apenas as migrações pendentes; a terceira adiciona a busca pública por nome/cidade com paginação e respeito à privacidade. A barra no topo abre `/pessoas` e os resultados abrem `/pessoas/:id`.
+
+
+### Contas reais, foto e tênis
+
+O acesso de demonstração foi desativado, inclusive quando faltam variáveis: nesse caso o aplicativo informa erro de configuração. `VITE_DEMO_MODE` não ativa mais contas fictícias. Configure `VITE_SUPABASE_URL` e `VITE_SUPABASE_PUBLISHABLE_KEY`.
+
+Se já executou as três migrações anteriores, execute apenas `supabase/migrations/20261017011946_runner_identity.sql` no SQL Editor. Para projeto novo, o instalador completo já inclui as quatro migrações; não execute ambos. Reimplante a função `delete-account` para incluir a limpeza dos avatares.
+
+Entre com sua conta → Perfil → Editar perfil. Envie JPG, PNG ou WebP de até 5 MB e informe a marca/modelo do tênis (opcional). É possível trocar ou remover a foto. Foto e tênis aparecem no perfil público; a foto também aparece no feed e na busca. Os avatares ficam em bucket privado com leitura autorizada por RLS e links temporários de até uma hora; um link já emitido continua válido até expirar após mudar a privacidade. Só o dono pode enviar e apagar arquivos na própria pasta. Não há registro de quilometragem por tênis nesta versão.

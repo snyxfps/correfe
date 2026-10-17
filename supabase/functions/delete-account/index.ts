@@ -121,6 +121,14 @@ export async function handleDeleteAccount(request: Request) {
         .remove(files.slice(i, i + 100));
       if (error) throw error;
     }
+    // Avatares usam um bucket privado separado e nomes únicos por usuário.
+    for (;;) {
+      const listed = await admin.storage.from("avatars").list(id, { limit: 100 });
+      if (listed.error) throw listed.error;
+      if (!listed.data?.length) break;
+      const removed = await admin.storage.from("avatars").remove(listed.data.map(file => `${id}/${file.name}`));
+      if (removed.error) throw removed.error;
+    }
     const { error: revokeError } = await admin.auth.admin.signOut(
       token,
       "global",

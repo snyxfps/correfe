@@ -1,3 +1,4 @@
+import { People, RunnerProfile } from "./components/People";
 import { Brand, LogoMark } from "./components/Brand";
 import { useEffect, useState, useRef } from "react";
 import { AuthPage } from "./components/AuthPage";
@@ -83,6 +84,7 @@ type Dialog =
 const navigation: { id: Tab; label: string; icon: typeof Home }[] = [
   { id: "feed", label: "Seu feed", icon: Home },
   { id: "runs", label: "Corridas", icon: CalendarDays },
+  { id: "people", label: "Corredores", icon: UserRound },
   { id: "groups", label: "Grupos", icon: Users },
   { id: "album", label: "Álbum coletivo", icon: Image },
   { id: "shop", label: "Loja dos grupos", icon: ShoppingBag },
@@ -91,10 +93,11 @@ export default function App() {
   const store = useCorre();
   const actionPending = useRef(false);
   const { path, go } = useRoute();
+  const [peopleQuery, setPeopleQuery] = useState(() => new URLSearchParams(window.location.search).get("q")?.slice(0,80) || "");
   const [discovery, setDiscovery] = useState<Discovery>(defaultDiscovery);
   const [albumRun, setAlbumRun] = useState("all");
   const [selectedPostRun, setSelectedPostRun] = useState<Run | null>(null);
-  const publicMatch = path.match(/^\/(corridas|grupos)\/([^/]+)$/);
+  const publicMatch = path.match(/^\/(corridas|grupos|pessoas)\/([^/]+)$/);
   const entityId = publicMatch?.[2] || "";
   const authModes: Record<string, "login" | "signup" | "recover" | "reset"> = {
     "/entrar": "login",
@@ -104,6 +107,7 @@ export default function App() {
   };
   const tabPaths: Record<Tab, string> = {
     feed: "/",
+    people: "/pessoas",
     runs: "/corridas",
     groups: "/grupos",
     album: "/album",
@@ -378,7 +382,7 @@ export default function App() {
     return (
       <article key={post.id} className="post-card">
         <div className="post-author">
-          <Avatar name={author?.name || "Corredor"} />
+          <Avatar name={author?.name || "Corredor"} path={author?.avatar_path} />
           <div>
             <strong>{author?.name || "Corredor"}</strong>
             <p>
@@ -524,10 +528,6 @@ export default function App() {
         key={path}
         mode={authModes[path]}
         go={go}
-        onDemo={() => {
-          store.enterDemo();
-          go("/");
-        }}
         onSuccess={() => {
           const next =
             new URLSearchParams(window.location.search).get("next") || "/";
@@ -583,7 +583,7 @@ export default function App() {
               userId ? navigate("profile") : setDialog({ type: "auth" })
             }
           >
-            <Avatar name={userId ? name : "Visitante"} />
+            <Avatar name={userId ? name : "Visitante"} path={me?.avatar_path} />
             <span>
               <strong>{userId ? name : "Entre na sua conta"}</strong>
               <small>
@@ -651,6 +651,9 @@ export default function App() {
             </button>
           </div>
         </header>
+        <form className="people-search-bar" role="search" onSubmit={e => { e.preventDefault(); navigate("people"); go("/pessoas?q=" + encodeURIComponent(peopleQuery)); }}>
+          <Search size={19}/><input aria-label="Buscar corredores por nome ou cidade" placeholder="Encontre pessoas para correr junto…" value={peopleQuery} maxLength={80} onChange={e=>setPeopleQuery(e.target.value)}/><button type="submit" className="button primary">Buscar</button>
+        </form>
         {isDemo && (
           <div className="demo-banner">
             DEMO{" "}
@@ -708,6 +711,7 @@ export default function App() {
                             <em>da sua turma.</em>
                           </>
                         ),
+                        people: <>O próximo corre.<br/><em>Uma nova companhia.</em></>,
                         profile: (
                           <>
                             Cada passo conta.
@@ -755,13 +759,13 @@ export default function App() {
               <button
                 className="text-link"
                 onClick={() =>
-                  navigate(publicMatch[1] === "corridas" ? "runs" : "groups")
+                  navigate(publicMatch[1] === "corridas" ? "runs" : publicMatch[1] === "pessoas" ? "people" : "groups")
                 }
               >
                 ← Explorar {publicMatch[1]}
               </button>
               <p className="eyebrow">CONVITE ABERTO · CORREFÉ</p>
-              {publicMatch[1] === "corridas" ? (
+              {publicMatch[1] === "pessoas" ? <RunnerProfile id={entityId} profiles={data.profiles}/> : publicMatch[1] === "corridas" ? (
                 data.runs.find((r) => r.id === entityId) ? (
                   renderRun(data.runs.find((r) => r.id === entityId)!)
                 ) : (
@@ -775,6 +779,7 @@ export default function App() {
             </section>
           ) : (
             <>
+              {tab === "people" && <People profiles={data.profiles} query={peopleQuery} open={id=>go("/pessoas/"+encodeURIComponent(id))}/>}
               {tab === "feed" && (
                 <div className="feed-layout">
                   <div className="feed-main">
@@ -1162,7 +1167,7 @@ export default function App() {
                   {userId ? (
                     <>
                       <section className="profile-card">
-                        <Avatar name={name} size="large" />
+                        <Avatar name={name} path={me?.avatar_path} size="large" />
                         <div>
                           <span className="eyebrow">
                             {isDemo
@@ -1170,6 +1175,7 @@ export default function App() {
                               : "SEU PERFIL"}
                           </span>
                           <h2>{name}</h2>
+                          {me?.shoes && <p className="runner-shoes">Meu tênis · {me.shoes}</p>}
                           <p className="muted">
                             {me?.city || "Conte de onde você corre"}
                           </p>
@@ -1301,7 +1307,7 @@ export default function App() {
       </div>
       <nav className="bottom-nav" aria-label="Navegação no celular">
         {[
-          ...navigation.filter((n) => n.id !== "album"),
+          ...navigation.filter((n) => n.id !== "album" && n.id !== "people"),
           { id: "profile" as Tab, label: "Perfil", icon: UserRound },
         ].map(({ id, label, icon: Icon }) => (
           <button
@@ -1655,18 +1661,25 @@ export default function App() {
             <Form
               button="Salvar perfil"
               onSubmit={async (f) => {
-                await store.saveProfile({
+                await store.saveIdentity({
+                  ...me,
+                  shoes: String(f.get("shoes")).trim(),
                   visibility: me?.visibility ?? "public",
                   id: userId!,
                   name: String(f.get("name")).trim(),
                   city: String(f.get("city")).trim(),
                   bio: String(f.get("bio")).trim(),
                   pace: String(f.get("pace")),
-                });
+                }, f.get("avatar") as File, f.get("remove_avatar") === "on");
                 setDialog(null);
                 setToast("Perfil atualizado!");
               }}
             >
+              <Avatar name={name} path={me?.avatar_path} size="large"/>
+              <Field label="Foto de perfil" name="avatar"><input name="avatar" type="file" accept="image/jpeg,image/png,image/webp"/></Field>
+              <p className="muted">JPG, PNG ou WebP, até 5 MB. A foto aparece junto ao seu perfil.</p>
+              {me?.avatar_path && <label><input type="checkbox" name="remove_avatar"/> Remover foto atual</label>}
+              <Field label="Tênis que uso para correr" name="shoes"><input name="shoes" defaultValue={me?.shoes} maxLength={120} placeholder="Ex.: ASICS Novablast 5"/></Field>
               <Field
                 label="Seu nome"
                 name="name"

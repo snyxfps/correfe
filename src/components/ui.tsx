@@ -1,16 +1,25 @@
-import { useEffect, useRef } from "react";
+import { supabase } from "../lib/client";
+import { useEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { X, ArrowUpRight, Footprints } from "lucide-react";
 export function Avatar({
   name,
+  path,
   size = "normal",
 }: {
   name: string;
+  path?: string | null;
   size?: "normal" | "large" | "small";
 }) {
+  const [src,setSrc] = useState<string>();
+  useEffect(()=>{
+    let active=true;setSrc(undefined);
+    if(path && supabase) void supabase.storage.from('avatars').createSignedUrl(path,3600).then(({data})=>{if(active)setSrc(data?.signedUrl);});
+    return()=>{active=false;};
+  },[path]);
   return (
     <span className={`avatar ${size}`} aria-label={name}>
-      {name
+      {src ? <img src={src} alt="" onError={()=>setSrc(undefined)}/> : name
         .split(" ")
         .slice(0, 2)
         .map((n) => n[0])

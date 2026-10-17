@@ -165,6 +165,24 @@ export function useCorre() {
     if (err) throw new Error("Não foi possível salvar seu perfil.");
     await refresh();
   }
+  async function saveIdentity(profile: Profile, file: File | null, remove: boolean) {
+    if(!userId || !supabase || profile.id!==userId) throw new Error('Entre para editar seu perfil.');
+    const oldPath=data.profiles.find(p=>p.id===userId)?.avatar_path;
+    let newPath: string | null = remove ? null : oldPath || null;
+    if(file?.size) {
+      if(!['image/jpeg','image/png','image/webp'].includes(file.type) || file.size>5*1024*1024) throw new Error('Escolha JPG, PNG ou WebP de até 5 MB.');
+      newPath=`${userId}/${crypto.randomUUID()}.${file.type.split('/')[1]}`;
+      const result=await supabase.storage.from('avatars').upload(newPath,file,{contentType:file.type,upsert:false});
+      if(result.error) throw new Error('Não foi possível enviar sua foto. Confira a migração de perfil e tente novamente.');
+    }
+    const result=await supabase.from('profiles').upsert({...profile,avatar_path:newPath});
+    if(result.error){
+      if(newPath && newPath!==oldPath) await supabase.storage.from('avatars').remove([newPath]);
+      throw new Error('Não foi possível salvar seu perfil. Confira a migração de perfil e tente novamente.');
+    }
+    if(oldPath && oldPath!==newPath) await supabase.storage.from('avatars').remove([oldPath]);
+    await refresh();
+  }
   async function upload(file: File) {
     if (!userId) throw new Error("Entre para enviar uma foto.");
     if (
@@ -411,6 +429,7 @@ export function useCorre() {
     refresh,
     insert,
     toggle,
+    saveIdentity,
     saveProfile,
     upload,
   };

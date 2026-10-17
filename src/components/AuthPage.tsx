@@ -6,20 +6,17 @@ import {
   Eye,
   EyeOff,
   Mail,
-  ShieldCheck,
 } from "lucide-react";
 import { Field, Form } from "./forms";
-import { isDemo, supabase } from "../lib/client";
+import { supabase } from "../lib/client";
 export type AuthMode = "login" | "signup" | "recover" | "reset";
 export function AuthPage({
   mode,
   go,
-  onDemo,
   onSuccess,
 }: {
   mode: AuthMode;
   go: (path: string) => void;
-  onDemo: () => void;
   onSuccess: () => void;
 }) {
   const [visible, setVisible] = useState(false),
@@ -105,15 +102,6 @@ export function AuthPage({
                   ? "Informe seu e-mail para receber as orientações."
                   : "Defina uma nova senha para a sua conta."}
           </p>
-          {isDemo && (
-            <div className="auth-demo">
-              <ShieldCheck size={17} />
-              <span>
-                Você está vendo uma demonstração. Nenhuma conta será criada e
-                nenhum e-mail será enviado.
-              </span>
-            </div>
-          )}
           {(mode === "login" || mode === "signup") && (
             <>
               <div className="social-buttons">
@@ -164,7 +152,7 @@ export function AuthPage({
               onSubmit={async (f) => {
                 if (!supabase)
                   throw new Error(
-                    "O acesso real será ativado ao conectar o Supabase. Use Explorar demonstração para conhecer o app.",
+                    "Configure o Supabase para acessar sua conta.",
                   );
                 const email = String(f.get("email") || "").trim(),
                   password = String(f.get("password") || "");
@@ -330,11 +318,6 @@ export function AuthPage({
                 {mode === "login" ? "Criar conta" : "Entrar"}
               </button>
             </p>
-          )}
-          {isDemo && (
-            <button className="button demo-explore full" onClick={onDemo}>
-              Explorar demonstração <ArrowUpRight size={17} />
-            </button>
           )}
           <p className="auth-footnote">
             Google e Apple serão conectados na próxima etapa. O acesso por
