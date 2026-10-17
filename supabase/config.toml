@@ -1,0 +1,5 @@
+project_id = "correfe-local"
+
+[functions.delete-account]
+# Validação explícita via auth.getUser(token) dentro da função, compatível com publishable keys.
+verify_jwt = false
